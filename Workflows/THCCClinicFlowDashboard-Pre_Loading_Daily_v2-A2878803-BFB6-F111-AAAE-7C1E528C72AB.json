@@ -1,0 +1,882 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr174_sharedcommondataserviceforapps_092ab"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Month",
+            "interval": 1,
+            "startTime": "06:00 AM",
+            "timeZone": "Pacific Standard Time"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "909144a9-1002-4e0f-991e-8f86475cdf49"
+          }
+        }
+      },
+      "actions": {
+        "List_rows_Appointment": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "mzk_patientappointmentemrs",
+              "$filter": "(mzk_starttime ge @{startOfDay(addDays(utcNow(), -37))} and mzk_starttime lt @{startOfDay(addDays(utcNow(), -36))}) and (mzk_appointmentstatus/mzk_name eq 'Checked In' or mzk_appointmentstatus/mzk_name eq 'Checked Out' or mzk_appointmentstatus/mzk_name eq 'Confirmed') or mzk_appointmentnumber eq 'AP000003530'  or mzk_appointmentnumber eq 'AP000003531' or mzk_appointmentnumber eq 'AP000003532' or mzk_appointmentnumber eq 'AP000003541' or mzk_appointmentnumber eq 'AP000003537' or mzk_appointmentnumber eq 'AP000003534' or mzk_appointmentnumber eq 'AP000003535' or mzk_appointmentnumber eq 'AP000003536'  or mzk_appointmentnumber eq 'AP000003540'\n\n"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "f18ce24e-1bad-4bbb-a43f-d95dea97e4f3"
+          }
+        },
+        "Apply_to_each_Appts": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_Appointment')?['body/value']",
+          "actions": {
+            "List_rows_Per_Appt": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_appointmentpowerbiaudits",
+                  "$filter": "_cr174_appointment_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}'"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecords",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "runAfter": {
+                "Add_a_new_row_in_OtherColumn_Variables": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "81dc86c2-5b61-4c51-9181-02face817f01"
+              }
+            },
+            "Condition_Appt_Not_existing": {
+              "type": "If",
+              "expression": {
+                "and": [
+                  {
+                    "equals": [
+                      "@length(outputs('List_rows_Per_Appt')?['body/value'])",
+                      0
+                    ]
+                  }
+                ]
+              },
+              "actions": {
+                "Get_a_row_by_Patient_ID": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "contacts",
+                      "recordId": "@items('Apply_to_each_Appts')?['_mzk_customerid_value']"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "GetItem",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "ee5fb508-7e33-4d12-8f24-8115b8ada4b8"
+                  }
+                },
+                "List_rows_Patient_Order": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "mzk_patientorders",
+                      "$filter": "_mzk_patientappointmentemr_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}'"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "ListRecords",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "runAfter": {
+                    "Condition": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "dc83f5ef-03ab-40cf-af80-7bc4934e705d"
+                  }
+                },
+                "Apply_to_each_Exam_Line": {
+                  "type": "Foreach",
+                  "foreach": "@outputs('List_rows_Patient_Order')?['body/value']",
+                  "actions": {
+                    "Get_a_row_by_Patient_Order_Product_ID": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "entityName": "mzk_products",
+                          "recordId": "@items('Apply_to_each_Exam_Line')?['_mzk_productid_value']"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "GetItem",
+                          "connectionName": "shared_commondataserviceforapps"
+                        }
+                      },
+                      "runAfter": {
+                        "Get_a_row_by_ID_Exam_Modifier": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "ee5fb508-7e33-4d12-8f24-8115b8ada4b8"
+                      }
+                    },
+                    "Get_a_row_by_ID_Exam_Modifier": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "entityName": "systemusers",
+                          "recordId": "@items('Apply_to_each_Exam_Line')?['_modifiedby_value']"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "GetItem",
+                          "connectionName": "shared_commondataserviceforapps"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "66b3fc49-180a-4d69-9c9c-7bf25b9fef3d"
+                      }
+                    },
+                    "Condition_-_Service_Variant_is_Empty": {
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@empty(outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_mzk_productclassification_value'])",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {},
+                      "else": {
+                        "actions": {
+                          "List_rows_ServiceVariant_L3": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "entityName": "cr174_clinic_flow_exam_servicevariants",
+                                "$filter": "_cr174_servicevariant_l3_id_value eq @{outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_mzk_productclassification_value']}"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                "operationId": "ListRecords",
+                                "connectionName": "shared_commondataserviceforapps"
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "119cf434-9e13-4a76-8fe1-d6749d6718bc"
+                            }
+                          },
+                          "Condition_Is_Exclude": {
+                            "type": "If",
+                            "expression": {
+                              "and": [
+                                {
+                                  "equals": [
+                                    "@concat('/msemr_codeableconcepts(', outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_mzk_productclassification_value'], ')')",
+                                    "Exclude"
+                                  ]
+                                }
+                              ]
+                            },
+                            "actions": {},
+                            "else": {
+                              "actions": {
+                                "Condition_ExamLine_Resource_is_Empty": {
+                                  "type": "If",
+                                  "expression": {
+                                    "and": [
+                                      {
+                                        "equals": [
+                                          "@  empty(items('Apply_to_each_Exam_Line')?['_th_resource_value'])",
+                                          true
+                                        ]
+                                      }
+                                    ]
+                                  },
+                                  "actions": {
+                                    "Add_a_new_row_Exclude_Resource_Exam_Line_": {
+                                      "type": "OpenApiConnection",
+                                      "inputs": {
+                                        "parameters": {
+                                          "entityName": "cr174_appointmentpowerbiaudits",
+                                          "item/cr174_appointment@odata.bind": "@concat('/mzk_patientappointmentemrs(', items('Apply_to_each_Appts')?['mzk_patientappointmentemrid'], ')')",
+                                          "item/cr174_appointmentstatuslabel": "@\r\nitems('Apply_to_each_Appts')?['_mzk_appointmentstatus_value@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_appointmenttypelabel": "@items('Apply_to_each_Appts')?['_mzk_appointmenttype_value@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_appointmentstatus@odata.bind": "@concat('/mzk_appointmentstatuses(', items('Apply_to_each_Appts')?['_mzk_appointmentstatus_value'], ')')",
+                                          "item/cr174_appointmenttype@odata.bind": "@concat('/mzk_appointmenttypes(', items('Apply_to_each_Appts')?['_mzk_appointmenttype_value'], ')')",
+                                          "item/cr174_arrivaltime": "@items('Apply_to_each_Appts')?['th_arrivaltime']",
+                                          "item/cr174_arrivaltime_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['th_arrivaltime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['th_arrivaltime'],\r\n    int(\r\n      if(\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)",
+                                          "item/cr174_cellcolor": "@if(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'No Show'), '#FFA500',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Declined'), '#E9AAD4',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Done'), '#D3CECF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                          "item/cr174_cellcolor_v1": "@if(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Cancelled'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'No Show'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Required'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Postponed'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Started'), '#8C5415',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Declined'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Done'), '#3C5032',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                          "item/cr174_checkedinon_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['mzk_checkintime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['mzk_checkintime'],\r\n    int(\r\n      if(\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)\r\n\r\n",
+                                          "item/cr174_checkedouton_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['cr174_checkouttime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['cr174_checkouttime'],\r\n    int(\r\n      if(\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)\r\n",
+                                          "item/cr174_checkintime": "@items('Apply_to_each_Appts')?['mzk_checkintime']",
+                                          "item/cr174_checkouttime": "@items('Apply_to_each_Appts')?['th_checkoutdate']",
+                                          "item/cr174_clinic@odata.bind": "@concat('/accounts(', items('Apply_to_each_Appts')?['_mzk_organizationunit_value'], ')')",
+                                          "item/cr174_doctorname": "@items('Apply_to_each_Appts')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_endtime": "@items('Apply_to_each_Appts')?['mzk_endtime']",
+                                          "item/cr174_examcode@odata.bind": "@concat('/mzk_products(', items('Apply_to_each_Exam_Line')?['_mzk_productid_value'], ')')",
+                                          "item/cr174_ExamCodeLine@odata.bind": "@concat('/mzk_patientorders(', items('Apply_to_each_Exam_Line')?['mzk_patientorderid'], ')')",
+                                          "item/cr174_examcodelinestatus": "@items('Apply_to_each_Exam_Line')?['mzk_orderstatus@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_examcodeno": "@items('Apply_to_each_Exam_Line')?['th_productid']",
+                                          "item/cr174_modifiedon_local": "@if(\r\n  or(\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    utcNow(),\r\n    int(\r\n      if(\r\n        equals(\r\n          toLower(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'])),\r\n          'true'\r\n        ),\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)",
+                                          "item/cr174_Modify_By_ExamLine@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Exam_Line')?['_modifiedby_value']),\r\n  '',\r\n  concat('/mzk_resources(', items('Apply_to_each_Exam_Line')?['_modifiedby_value'], ')')\r\n)",
+                                          "item/cr174_modify_nm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']\r\n)",
+                                          "item/cr174_patient@odata.bind": "@concat('/contacts(', items('Apply_to_each_Appts')?['_mzk_customerid_value'], ')')",
+                                          "item/cr174_patientfullname": "@concat(coalesce(outputs('Get_a_row_by_Patient_ID')?['body/firstname'], ''), ' ', coalesce(outputs('Get_a_row_by_Patient_ID')?['body/lastname'], ''))",
+                                          "item/cr174_patientmrn": "@outputs('Get_a_row_by_Patient_ID')?['body/mzk_patientmrn']",
+                                          "item/cr174_protocol@odata.bind": "@\r\nif(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), concat('/mzk_products(', items('Apply_to_each_Appts')?['_th_protocol_value'], ')'), null)",
+                                          "item/cr174_protocolnm": "@if(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), outputs('Get_a_row_by_Protocol_Id')?['body/mzk_name'], null)",
+                                          "item/cr174_protocolno": "@if(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), outputs('Get_a_row_by_Protocol_Id')?['body/mzk_productnumber'], null)",
+                                          "item/cr174_resource@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Appts')?['_mzk_resource_value']),\r\n  null,\r\n  concat('/mzk_resources(', items('Apply_to_each_Appts')?['_mzk_resource_value'], ')')\r\n)",
+                                          "item/cr174_service_columndisplayorder": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), null, first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_displayorder'])",
+                                          "item/cr174_service_columnkey": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), '', first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_columnkey'])",
+                                          "item/cr174_service_columntype": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), true, first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_columntype'])",
+                                          "item/cr174_service_L2@odata.bind": "@if(\r\n  empty(outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_th_component_value']),\r\n  '',\r\n  concat('/msemr_codeableconcepts(', outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_th_component_value'], ')')\r\n)",
+                                          "item/cr174_servicestatus": "@items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_servicestatuslabel": "@items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue']",
+                                          "item/cr174_servicevariant_L3@odata.bind": "@concat('/msemr_codeableconcepts(', outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_mzk_productclassification_value'], ')')",
+                                          "item/cr174_starttime": "@items('Apply_to_each_Appts')?['mzk_starttime']",
+                                          "item/cr174_subclinic@odata.bind": "@if(empty(items('Apply_to_each_Appts')?['_th_subclinic_value']), null, concat('/accounts(', items('Apply_to_each_Appts')?['_th_subclinic_value'], ')'))"
+                                        },
+                                        "host": {
+                                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                          "operationId": "CreateRecord",
+                                          "connectionName": "shared_commondataserviceforapps"
+                                        }
+                                      },
+                                      "metadata": {
+                                        "operationMetadataId": "0f403a71-e584-4569-af22-1ac7508d0694"
+                                      }
+                                    }
+                                  },
+                                  "else": {
+                                    "actions": {
+                                      "Get_a_row_by_ID_Exam_Resource": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                          "parameters": {
+                                            "entityName": "mzk_resources",
+                                            "recordId": "@items('Apply_to_each_Exam_Line')?['_th_resource_value']"
+                                          },
+                                          "host": {
+                                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                            "operationId": "GetItem",
+                                            "connectionName": "shared_commondataserviceforapps"
+                                          }
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "ee5fb508-7e33-4d12-8f24-8115b8ada4b8"
+                                        }
+                                      },
+                                      "Add_a_new_row_": {
+                                        "type": "OpenApiConnection",
+                                        "inputs": {
+                                          "parameters": {
+                                            "entityName": "cr174_appointmentpowerbiaudits",
+                                            "item/cr174_appointment@odata.bind": "@concat('/mzk_patientappointmentemrs(', items('Apply_to_each_Appts')?['mzk_patientappointmentemrid'], ')')",
+                                            "item/cr174_appointmentstatuslabel": "@\r\nitems('Apply_to_each_Appts')?['_mzk_appointmentstatus_value@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_appointmenttypelabel": "@items('Apply_to_each_Appts')?['_mzk_appointmenttype_value@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_appointmentstatus@odata.bind": "@concat('/mzk_appointmentstatuses(', items('Apply_to_each_Appts')?['_mzk_appointmentstatus_value'], ')')",
+                                            "item/cr174_appointmenttype@odata.bind": "@concat('/mzk_appointmenttypes(', items('Apply_to_each_Appts')?['_mzk_appointmenttype_value'], ')')",
+                                            "item/cr174_arrivaltime": "@items('Apply_to_each_Appts')?['th_arrivaltime']",
+                                            "item/cr174_arrivaltime_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['th_arrivaltime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['th_arrivaltime'],\r\n    int(\r\n      if(\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)",
+                                            "item/cr174_cellcolor": "@if(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'No Show'), '#FFA500',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Declined'), '#E9AAD4',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Done'), '#D3CECF',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                            "item/cr174_cellcolor_v1": "@if(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Cancelled'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'No Show'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Required'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Postponed'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Not Started'), '#8C5415',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Declined'), '#676E73',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Done'), '#3C5032',\r\nif(equals(items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                            "item/cr174_checkedinon_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['mzk_checkintime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['mzk_checkintime'],\r\n    int(\r\n      if(\r\n       first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)\r\n\r\n",
+                                            "item/cr174_checkedouton_local": "@if(\r\n  or(\r\n    empty(items('Apply_to_each_Appts')?['cr174_checkouttime']),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    items('Apply_to_each_Appts')?['cr174_checkouttime'],\r\n    int(\r\n      if(\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)\r\n",
+                                            "item/cr174_checkintime": "@items('Apply_to_each_Appts')?['mzk_checkintime']",
+                                            "item/cr174_checkouttime": "@items('Apply_to_each_Appts')?['th_checkoutdate']",
+                                            "item/cr174_clinic@odata.bind": "@concat('/accounts(', items('Apply_to_each_Appts')?['_mzk_organizationunit_value'], ')')",
+                                            "item/cr174_doctorname": "@items('Apply_to_each_Appts')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_endtime": "@items('Apply_to_each_Appts')?['mzk_endtime']",
+                                            "item/cr174_examcode@odata.bind": "@concat('/mzk_products(', items('Apply_to_each_Exam_Line')?['_mzk_productid_value'], ')')",
+                                            "item/cr174_ExamCodeLine@odata.bind": "@concat('/mzk_patientorders(', items('Apply_to_each_Exam_Line')?['mzk_patientorderid'], ')')",
+                                            "item/cr174_examcodelinestatus": "@items('Apply_to_each_Exam_Line')?['mzk_orderstatus@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_examcodeno": "@items('Apply_to_each_Exam_Line')?['th_productid']",
+                                            "item/cr174_modifiedon_local": "@if(\r\n  or(\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard'])),\r\n    empty(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving']))\r\n  ),\r\n  null,\r\n  addHours(\r\n    utcNow(),\r\n    int(\r\n      if(\r\n        equals(\r\n          toLower(string(first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_dst'])),\r\n          'true'\r\n        ),\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_daylightsaving'],\r\n        first(outputs('List_rows_UTC_Offset_1')?['body/value'])?['cr174_utc_offset_standard']\r\n      )\r\n    ),\r\n    'yyyy-MM-dd hh:mm tt'\r\n  )\r\n)",
+                                            "item/cr174_Modify_By_ExamLine@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Exam_Line')?['_modifiedby_value']),\r\n  '',\r\n  concat('/mzk_resources(', items('Apply_to_each_Exam_Line')?['_modifiedby_value'], ')')\r\n)",
+                                            "item/cr174_modify_nm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']\r\n)",
+                                            "item/cr174_patient@odata.bind": "@concat('/contacts(', items('Apply_to_each_Appts')?['_mzk_customerid_value'], ')')",
+                                            "item/cr174_patientfullname": "@concat(coalesce(outputs('Get_a_row_by_Patient_ID')?['body/firstname'], ''), ' ', coalesce(outputs('Get_a_row_by_Patient_ID')?['body/lastname'], ''))",
+                                            "item/cr174_patientmrn": "@outputs('Get_a_row_by_Patient_ID')?['body/mzk_patientmrn']",
+                                            "item/cr174_protocol@odata.bind": "@\r\nif(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), concat('/mzk_products(', items('Apply_to_each_Appts')?['_th_protocol_value'], ')'), null)",
+                                            "item/cr174_protocolnm": "@if(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), outputs('Get_a_row_by_Protocol_Id')?['body/mzk_name'], null)",
+                                            "item/cr174_protocolno": "@if(not(empty(items('Apply_to_each_Appts')?['_th_protocol_value'])), outputs('Get_a_row_by_Protocol_Id')?['body/mzk_productnumber'], null)",
+                                            "item/cr174_resource@odata.bind": "@\r\nif(\r\n  empty(items('Apply_to_each_Appts')?['_mzk_resource_value']),\r\n  null,\r\n  concat('/mzk_resources(', items('Apply_to_each_Appts')?['_mzk_resource_value'], ')')\r\n)",
+                                            "item/cr174_Resource_ExamLine@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Exam_Line')?['_th_resource_value']),\r\n  null,\r\n  concat('/mzk_resources(', items('Apply_to_each_Exam_Line')?['_th_resource_value'], ')')\r\n)",
+                                            "item/cr174_resourcenm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']\r\n)",
+                                            "item/cr174_service_columndisplayorder": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), null, first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_displayorder'])",
+                                            "item/cr174_service_columnkey": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), '', first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_columnkey'])",
+                                            "item/cr174_service_columntype": "@if(empty(outputs('List_rows_ServiceVariant_L3')?['body/value']), true, first(outputs('List_rows_ServiceVariant_L3')?['body/value'])?['cr174_columntype'])",
+                                            "item/cr174_service_L2@odata.bind": "@if(\r\n  empty(outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_th_component_value']),\r\n  '',\r\n  concat('/msemr_codeableconcepts(', outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_th_component_value'], ')')\r\n)",
+                                            "item/cr174_servicestatus": "@items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_servicestatuslabel": "@items('Apply_to_each_Exam_Line')?['th_servicestatus@OData.Community.Display.V1.FormattedValue']",
+                                            "item/cr174_servicevariant_L3@odata.bind": "@concat('/msemr_codeableconcepts(', outputs('Get_a_row_by_Patient_Order_Product_ID')?['body/_mzk_productclassification_value'], ')')",
+                                            "item/cr174_starttime": "@items('Apply_to_each_Appts')?['mzk_starttime']",
+                                            "item/cr174_subclinic@odata.bind": "@if(empty(items('Apply_to_each_Appts')?['_th_subclinic_value']), null, concat('/accounts(', items('Apply_to_each_Appts')?['_th_subclinic_value'], ')'))"
+                                          },
+                                          "host": {
+                                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                            "operationId": "CreateRecord",
+                                            "connectionName": "shared_commondataserviceforapps"
+                                          }
+                                        },
+                                        "runAfter": {
+                                          "Get_a_row_by_ID_Exam_Resource": [
+                                            "Succeeded"
+                                          ]
+                                        },
+                                        "metadata": {
+                                          "operationMetadataId": "0f403a71-e584-4569-af22-1ac7508d0694"
+                                        }
+                                      }
+                                    }
+                                  },
+                                  "metadata": {
+                                    "operationMetadataId": "bc3fe9db-f093-40d4-befb-7b7bd8da9254"
+                                  }
+                                }
+                              }
+                            },
+                            "runAfter": {
+                              "List_rows_ServiceVariant_L3": [
+                                "Succeeded"
+                              ]
+                            },
+                            "metadata": {
+                              "operationMetadataId": "4ceb6df0-18a4-45a1-8e34-e5440903590a"
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "Get_a_row_by_Patient_Order_Product_ID": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "f5375c5d-764d-46a6-ab9e-7b8696121c97"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "List_rows_Patient_Order": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 50
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "3e6991ae-bb14-4766-ae6e-af25f146c23c"
+                  }
+                },
+                "List_rows_exam_line": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "cr174_appointmentpowerbiaudits",
+                      "$filter": " _cr174_appointment_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}' ",
+                      "$orderby": "cr174_service_columndisplayorder asc"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "ListRecords",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "runAfter": {
+                    "Apply_to_each_Exam_Line": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "aef06117-a22e-4a0a-934f-e968ac38efea"
+                  }
+                },
+                "Apply_to_each_ExamLine_for_updating": {
+                  "type": "Foreach",
+                  "foreach": "@outputs('List_rows_exam_line')?['body/value']",
+                  "actions": {
+                    "Condition_-_for_others_and_service_L2_changed": {
+                      "type": "If",
+                      "expression": {
+                        "and": [
+                          {
+                            "equals": [
+                              "@and(\r\n  not(equals(items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey'], '')),\r\n  equals(items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columntype'], false)\r\n)",
+                              true
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Condition_-_for_others_": {
+                          "type": "If",
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@not(equals(items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey'], first (outputs('List_other_column_variable_rows_1_1')?['body/value'])?['cr174_lastotherkey']))",
+                                  true
+                                ]
+                              }
+                            ]
+                          },
+                          "actions": {
+                            "Update_a_other_column_variable__row": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "entityName": "cr174_clinic_flow_othercolumn_variables",
+                                  "recordId": "@first (outputs('List_other_column_variable_rows_1_1')?['body/value'])?['cr174_clinic_flow_othercolumn_variableid']",
+                                  "item/cr174_lastotherkey": "@items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey']",
+                                  "item/cr174_otherindex": "@add(first(outputs('List_other_column_variable_rows_1_1')?['body/value'])?['cr174_otherindex'], 1)\r\n\r\n"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                  "operationId": "UpdateOnlyRecord",
+                                  "connectionName": "shared_commondataserviceforapps"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "6d5b104b-5a17-4847-a287-93b77d3d9c0c"
+                              }
+                            }
+                          },
+                          "else": {
+                            "actions": {}
+                          },
+                          "metadata": {
+                            "operationMetadataId": "8a4bc631-0b2e-4f4c-9e66-c811e1bf3d21"
+                          }
+                        },
+                        "Update_a_row_ServiceOtherColumnkey_by_Other_1": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "entityName": "cr174_appointmentpowerbiaudits",
+                              "recordId": "@items('Apply_to_each_ExamLine_for_updating')?['cr174_appointmentpowerbiauditid']",
+                              "item/cr174_apptlabel": "@concat(\r\n  if(empty(items('Apply_to_each_ExamLine_for_updating')?['cr174_arrivaltime']), '', formatDateTime(items('Apply_to_each_ExamLine_for_updating')?['cr174_arrivaltime'], 'hh:mm tt')),\r\n  ' ',\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_cr174_appointmentstatus_value@OData.Community.Display.V1.FormattedValue'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientfullname'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientmrn'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_protocolnm'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue'], '')\r\n)",
+                              "item/cr174_apptlabel_v1": "@concat(\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientfullname'], ''), \r\n  decodeUriComponent('%0A'),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_protocolnm'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(\r\n    items('Apply_to_each_ExamLine_for_updating')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue'],\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_doctorname'],\r\n    ''\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_cr174_appointment_value@OData.Community.Display.V1.FormattedValue'], '')\r\n)",
+                              "item/cr174_cellcontent": "@concat(\r\n  items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(items('Apply_to_each_ExamLine_for_updating')?['cr174_resource_examline']),\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_modify_nm_examline'],\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A')\r\n)\r\n",
+                              "item/cr174_cellcontent_v1": "@coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_servicestatuslabel'], '')",
+                              "item/cr174_service_othercolumnkey": "@concat('Other', string(first(outputs('List_other_column_variable_rows_1')?['body/value'])?['cr174_otherindex']))\r\n\r\n",
+                              "item/cr174_service_otherindex": "@first(outputs('List_other_column_variable_rows_1')?['body/value'])?['cr174_otherindex']"
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                              "operationId": "UpdateOnlyRecord",
+                              "connectionName": "shared_commondataserviceforapps"
+                            }
+                          },
+                          "runAfter": {
+                            "List_other_column_variable_rows_1": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "ae1001df-b92a-4607-8d2c-0c3ba4ff347b"
+                          }
+                        },
+                        "List_other_column_variable_rows_1": {
+                          "type": "OpenApiConnection",
+                          "inputs": {
+                            "parameters": {
+                              "entityName": "cr174_clinic_flow_othercolumn_variables",
+                              "$filter": " _cr174_appointment_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}' "
+                            },
+                            "host": {
+                              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                              "operationId": "ListRecords",
+                              "connectionName": "shared_commondataserviceforapps"
+                            }
+                          },
+                          "runAfter": {
+                            "Condition_-_for_others_": [
+                              "Succeeded"
+                            ]
+                          },
+                          "metadata": {
+                            "operationMetadataId": "cf2ec176-47ad-46c5-8868-0cf0bbfe7a2c"
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Update_a_row_ServiceOtherColumnkey_by_serviceColumnKey": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "entityName": "cr174_appointmentpowerbiaudits",
+                                "recordId": "@items('Apply_to_each_ExamLine_for_updating')?['cr174_appointmentpowerbiauditid']",
+                                "item/cr174_apptlabel": "@concat(\r\n  if(empty(items('Apply_to_each_ExamLine_for_updating')?['cr174_arrivaltime']), '', formatDateTime(items('Apply_to_each_ExamLine_for_updating')?['cr174_arrivaltime'], 'hh:mm tt')),\r\n  ' ',\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_cr174_appointmentstatus_value@OData.Community.Display.V1.FormattedValue'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientfullname'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientmrn'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_protocolnm'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue'], '')\r\n)",
+                                "item/cr174_apptlabel_v1": "@concat(\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_patientfullname'], ''), \r\n  decodeUriComponent('%0A'),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_protocolnm'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(\r\n    items('Apply_to_each_ExamLine_for_updating')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue'],\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_doctorname'],\r\n    ''\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each_ExamLine_for_updating')?['_cr174_appointment_value@OData.Community.Display.V1.FormattedValue'], '')\r\n)",
+                                "item/cr174_cellcontent": "@concat(\r\n  items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(items('Apply_to_each_ExamLine_for_updating')?['cr174_resource_examline']),\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_modify_nm_examline'],\r\n    items('Apply_to_each_ExamLine_for_updating')?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A')\r\n)\r\n",
+                                "item/cr174_cellcontent_v1": "@coalesce(items('Apply_to_each_ExamLine_for_updating')?['cr174_servicestatuslabel'], '')",
+                                "item/cr174_service_othercolumnkey": "@items('Apply_to_each_ExamLine_for_updating')?['cr174_service_columnkey']"
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                "operationId": "UpdateOnlyRecord",
+                                "connectionName": "shared_commondataserviceforapps"
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "ae1001df-b92a-4607-8d2c-0c3ba4ff347b"
+                            }
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "List_other_column_variable_rows_1_1": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "8a4bc631-0b2e-4f4c-9e66-c811e1bf3d21"
+                      }
+                    },
+                    "List_other_column_variable_rows_1_1": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "entityName": "cr174_clinic_flow_othercolumn_variables",
+                          "$filter": " _cr174_appointment_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}' "
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "ListRecords",
+                          "connectionName": "shared_commondataserviceforapps"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "fa9ff4ec-8e58-4bdf-b16b-3223a0e6f525"
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "List_rows_exam_line": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "concurrency": {
+                      "repetitions": 50
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "9fb6ebe3-f1f4-4853-931a-f11e1b4eceb4"
+                  }
+                },
+                "Condition": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@empty(items('Apply_to_each_Appts')?['_th_protocol_value'])",
+                          true
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {},
+                  "else": {
+                    "actions": {
+                      "Get_a_row_by_Protocol_Id": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "entityName": "mzk_products",
+                            "recordId": "@items('Apply_to_each_Appts')?['_th_protocol_value']"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                            "operationId": "GetItem",
+                            "connectionName": "shared_commondataserviceforapps"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "ee5fb508-7e33-4d12-8f24-8115b8ada4b8"
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Get_a_row_by_Patient_ID": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "fe98ceb7-a2e8-4c84-991d-60aff419fd0f"
+                  }
+                },
+                "Condition_exam_line_is_empty": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "equals": [
+                          "@length(outputs('List_rows_exam_line')?['body/value'])\r\n",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {},
+                  "else": {
+                    "actions": {
+                      "List_rows_exam_line_for_adding_waiting_row": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "entityName": "cr174_appointmentpowerbiaudits",
+                            "$filter": " _cr174_appointment_value eq '@{items('Apply_to_each_Appts')?['mzk_patientappointmentemrid']}' ",
+                            "$orderby": "cr174_service_columndisplayorder asc"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                            "operationId": "ListRecords",
+                            "connectionName": "shared_commondataserviceforapps"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "aef06117-a22e-4a0a-934f-e968ac38efea"
+                        }
+                      },
+                      "Add_a_new_row_waittime": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "entityName": "cr174_appointmentpowerbiaudits",
+                            "item/cr174_appointment@odata.bind": "@concat('/mzk_patientappointmentemrs(', items('Apply_to_each_Appts')?['mzk_patientappointmentemrid'], ')')\r\n",
+                            "item/cr174_appointmentstatuslabel": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_appointmentstatuslabel']",
+                            "item/cr174_appointmenttypelabel": "@\r\nfirst(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_appointmenttypelabel']",
+                            "item/cr174_appointmentstatus@odata.bind": "@\r\nconcat('/mzk_appointmentstatuses(', items('Apply_to_each_Appts')?['_mzk_appointmentstatus_value'], ')')\r\n",
+                            "item/cr174_apptlabel": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_apptlabel']",
+                            "item/cr174_apptlabel_v1": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_apptlabel_v1']",
+                            "item/cr174_arrivaltime": "@items('Apply_to_each_Appts')?['th_arrivaltime']",
+                            "item/cr174_arrivaltime_local": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_arrivaltime_local']\r\n",
+                            "item/cr174_checkedinon_local": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_checkedinon_local']\r\n",
+                            "item/cr174_checkedouton_local": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_checkedouton_local']\r\n",
+                            "item/cr174_checkintime": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_checkintime']",
+                            "item/cr174_checkouttime": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_checkouttime']\r\n",
+                            "item/cr174_clinic@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Appts')?['_mzk_organizationunit_value']),\r\n  null,\r\n  concat('/accounts(', items('Apply_to_each_Appts')?['_mzk_organizationunit_value'], ')')\r\n)",
+                            "item/cr174_modifiedon_local": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_modifiedon_local']\r\n",
+                            "item/cr174_patientfullname": "@\r\n\r\nfirst(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_patientfullname']\r\n\r\n",
+                            "item/cr174_patientmrn": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_patientmrn']",
+                            "item/cr174_protocolnm": "@first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['cr174_protocolnm']\r\n\r\n\r\n",
+                            "item/cr174_resource@odata.bind": "@if(\r\n  empty(items('Apply_to_each_Appts')?['_mzk_resource_value']),\r\n  null,\r\n  concat('/mzk_resources(', items('Apply_to_each_Appts')?['_mzk_resource_value'], ')')\r\n)\r\n",
+                            "item/cr174_service_columndisplayorder": 0,
+                            "item/cr174_service_columntype": true,
+                            "item/cr174_service_othercolumnkey": "Status",
+                            "item/cr174_subclinic@odata.bind": "@if(empty(first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['_th_subclinic_value']), null, concat('/accounts(', first(outputs('List_rows_exam_line_for_adding_waiting_row')?['body/value'])?['_th_subclinic_value'], ')'))\r\n\r\n\r\n"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                            "operationId": "CreateRecord",
+                            "connectionName": "shared_commondataserviceforapps"
+                          }
+                        },
+                        "runAfter": {
+                          "List_rows_exam_line_for_adding_waiting_row": [
+                            "Succeeded"
+                          ]
+                        },
+                        "metadata": {
+                          "operationMetadataId": "f539a8a7-d457-4998-aa5d-bb71d392155c"
+                        }
+                      }
+                    }
+                  },
+                  "runAfter": {
+                    "Apply_to_each_ExamLine_for_updating": [
+                      "Succeeded"
+                    ]
+                  },
+                  "metadata": {
+                    "operationMetadataId": "bbdfb1c0-62ff-42e3-b46a-a34bca9cb191"
+                  }
+                }
+              },
+              "else": {
+                "actions": {}
+              },
+              "runAfter": {
+                "List_rows_Per_Appt": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "15c5080f-3541-4ef3-b97b-221de62ec7e1"
+              }
+            },
+            "Add_a_new_row_in_OtherColumn_Variables": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_clinic_flow_othercolumn_variables",
+                  "item/cr174_Appointment@odata.bind": "@concat('/mzk_patientappointmentemrs(', items('Apply_to_each_Appts')?['mzk_patientappointmentemrid'], ')')",
+                  "item/cr174_lastotherkey": "\"\"",
+                  "item/cr174_otherindex": 0
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "CreateRecord",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "runAfter": {
+                "List_rows_UTC_Offset_1": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "04b4cdb7-e0fe-4a8b-ae4a-bf90aebc1458"
+              }
+            },
+            "List_rows_UTC_Offset": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_clinic_flow_clinic_utc_offsets",
+                  "$filter": "_cr174_clinic_value eq '@{items('Apply_to_each_Appts')?['_mzk_organizationunit_value']}'"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecords",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "5e43ba63-8efa-4f29-b81e-97b64e5c59de"
+              }
+            },
+            "For_each": {
+              "type": "Foreach",
+              "foreach": "@outputs('List_rows_UTC_Offset')?['body/value']",
+              "actions": {
+                "Update_a_row_UTC_DST": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "cr174_clinic_flow_clinic_utc_offsets",
+                      "recordId": "@items('For_each')?['cr174_clinic_flow_clinic_utc_offsetid']",
+                      "item/cr174_dst": "@not(\r\n  equals(\r\n    formatDateTime(convertFromUtc(utcNow(), 'Eastern Standard Time'), 'zzz'),\r\n    '-05:00'\r\n  )\r\n)"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "UpdateOnlyRecord",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "metadata": {
+                    "operationMetadataId": "2dd4adcf-b110-4ede-896e-1972b2cee29a"
+                  }
+                }
+              },
+              "runAfter": {
+                "List_rows_UTC_Offset": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "28663a8e-6f2c-4d8e-9110-3213317507b1"
+              }
+            },
+            "List_rows_UTC_Offset_1": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_clinic_flow_clinic_utc_offsets",
+                  "$filter": "_cr174_clinic_value eq '@{items('Apply_to_each_Appts')?['_mzk_organizationunit_value']}'"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecords",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "runAfter": {
+                "For_each": [
+                  "Succeeded"
+                ]
+              },
+              "metadata": {
+                "operationMetadataId": "0e341112-351a-4f47-8a68-67648b75f488"
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_Appointment": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "5d6f7e79-5cc2-4112-89c6-b97ebbce0aa0"
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

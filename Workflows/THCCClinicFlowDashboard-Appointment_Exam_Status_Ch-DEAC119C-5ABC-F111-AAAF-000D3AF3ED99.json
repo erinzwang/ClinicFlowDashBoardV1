@@ -1,0 +1,888 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr174_sharedcommondataserviceforapps_092ab"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "mzk_patientorder",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "th_servicestatus",
+              "subscriptionRequest/name": "deac119c-5abc-f111-aaaf-000d3af3ed99:MTA"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 77
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "1a46e64a-708a-4f7e-8be8-0a028f6f93b3"
+          }
+        }
+      },
+      "actions": {
+        "List_rows_Audits": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "cr174_appointmentpowerbiaudits",
+              "$filter": "_cr174_examcodeline_value eq '@{triggerOutputs()?['body/mzk_patientorderid']}'"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Condition_ExamLine_Resource_is_Empty": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "b068bd5d-65f1-4365-a51c-d27ce43a5a72"
+          }
+        },
+        "Condition_-_Not_Existing": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@length(outputs('List_rows_Audits')?['body/value'])",
+                  0
+                ]
+              }
+            ]
+          },
+          "actions": {
+            "Get_a_Appt_row_by_ID__": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "mzk_patientappointmentemrs",
+                  "recordId": "@outputs('Get_a_Patient_Order_row_by_ID')?['body/_mzk_patientappointmentemr_value']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "GetItem",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              },
+              "metadata": {
+                "operationMetadataId": "b75ca49a-618e-42d1-b5e6-fd46bdf6254f"
+              }
+            }
+          },
+          "else": {
+            "actions": {
+              "Condition_Service_Status_Is_Started": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "equals": [
+                        "@triggerOutputs()?['body/_th_servicestatus_label']",
+                        "Started"
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "Update_a_row_StartTime_Status": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "entityName": "cr174_appointmentpowerbiaudits",
+                        "recordId": "@first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentpowerbiauditid']",
+                        "item/cr174_cellcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                        "item/cr174_cellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                        "item/cr174_line_starttime": "@\r\n        convertFromUtc(\r\n          utcNow(),\r\n          first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n        )",
+                        "item/cr174_Modify_By_ExamLine@odata.bind": "@if(empty(triggerOutputs()?['body/_modifiedby_value']), null, concat('systemusers(', triggerOutputs()?['body/_modifiedby_value'], ')'))",
+                        "item/cr174_modify_nm_examline": "@outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']",
+                        "item/cr174_Resource_ExamLine@odata.bind": "@if(\r\n  empty(triggerOutputs()?['body/_th_resource_value']),\r\n  null,\r\n  concat('mzk_resources(', triggerOutputs()?['body/_th_resource_value'], ')')\r\n)",
+                        "item/cr174_resourcenm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']\r\n)",
+                        "item/cr174_servicestatus": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                        "item/cr174_servicestatuslabel": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                        "item/cr174_wait_time": "@if(\r\n  equals(first(outputs('List_rows_Audits')?['body/value'])?['cr174_inexam'], true),\r\n  0,\r\n  if(\r\n    not(empty(first(outputs('List_rows_Audits')?['body/value'])?['cr174_last_examline_endtime'])),\r\n    div(\r\n      sub(\r\n        ticks(utcNow()),\r\n        ticks(first(outputs('List_rows_Audits')?['body/value'])?['cr174_last_examline_endtime'])\r\n      ),\r\n      600000000\r\n    ),\r\n    if(\r\n      and(\r\n        not(empty(first(outputs('List_rows_Audits')?['body/value'])?['cr174_checkintime'])),\r\n        not(empty(first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentstatuslabel'])),\r\n        equals(first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentstatuslabel'], 'Checked In')\r\n      ),\r\n      div(\r\n        sub(\r\n          ticks(utcNow()),\r\n          ticks(first(outputs('List_rows_Audits')?['body/value'])?['cr174_checkintime'])\r\n        ),\r\n        600000000\r\n      ),\r\n      0\r\n    )\r\n  )\r\n)"
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                        "operationId": "UpdateOnlyRecord",
+                        "connectionName": "shared_commondataserviceforapps"
+                      }
+                    },
+                    "metadata": {
+                      "operationMetadataId": "c64afa58-b5b0-447d-aab1-476333fa8791"
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "Condition_Status_is_Others_Exclude_Not_Start": {
+                      "type": "If",
+                      "expression": {
+                        "or": [
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "Done"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "Declined"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "Not Required"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "Postponed"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "No Show"
+                            ]
+                          },
+                          {
+                            "equals": [
+                              "@triggerOutputs()?['body/_th_servicestatus_label']",
+                              "Cancelled"
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "Condition_Is_StartTime_Is_null": {
+                          "type": "If",
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@empty(first(outputs('List_rows_Audits')?['body/value'])?['cr174_line_starttime'])",
+                                  true
+                                ]
+                              }
+                            ]
+                          },
+                          "actions": {
+                            "Update_a_row_StartTime_EndTime_Status": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "entityName": "cr174_appointmentpowerbiaudits",
+                                  "recordId": "@first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentpowerbiauditid']",
+                                  "item/cr174_cellcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                  "item/cr174_cellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                  "item/cr174_duration": 0,
+                                  "item/cr174_line_endtime": "@        convertFromUtc(\r\n          utcNow(),\r\n          first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n        )",
+                                  "item/cr174_line_starttime": "@        convertFromUtc(\r\n          utcNow(),\r\n          first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n        )",
+                                  "item/cr174_Modify_By_ExamLine@odata.bind": "@if(empty(triggerOutputs()?['body/_modifiedby_value']), null, concat('systemusers(', triggerOutputs()?['body/_modifiedby_value'], ')'))",
+                                  "item/cr174_modify_nm_examline": "@outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']",
+                                  "item/cr174_Resource_ExamLine@odata.bind": "@if(\r\n  empty(triggerOutputs()?['body/_th_resource_value']),\r\n  null,\r\n  concat('mzk_resources(', triggerOutputs()?['body/_th_resource_value'], ')')\r\n)",
+                                  "item/cr174_resourcenm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']\r\n)",
+                                  "item/cr174_servicestatus": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                  "item/cr174_servicestatuslabel": "@triggerOutputs()?['body/_th_servicestatus_label']"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                  "operationId": "UpdateOnlyRecord",
+                                  "connectionName": "shared_commondataserviceforapps"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "6d87828d-520f-4289-a4c9-36ad55d169d6"
+                              }
+                            }
+                          },
+                          "else": {
+                            "actions": {
+                              "Update_a_row_EndTime_Status": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "entityName": "cr174_appointmentpowerbiaudits",
+                                    "recordId": "@first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentpowerbiauditid']",
+                                    "item/cr174_cellcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                    "item/cr174_cellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                    "item/cr174_line_endtime": "@        convertFromUtc(\r\n          utcNow(),\r\n          first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n        )",
+                                    "item/cr174_Modify_By_ExamLine@odata.bind": "@if(empty(triggerOutputs()?['body/_modifiedby_value']), null, concat('systemusers(', triggerOutputs()?['body/_modifiedby_value'], ')'))",
+                                    "item/cr174_modify_nm_examline": "@outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']",
+                                    "item/cr174_Resource_ExamLine@odata.bind": "@if(\r\n  empty(triggerOutputs()?['body/_th_resource_value']),\r\n  null,\r\n  concat('mzk_resources(', triggerOutputs()?['body/_th_resource_value'], ')')\r\n)",
+                                    "item/cr174_resourcenm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']\r\n)",
+                                    "item/cr174_servicestatus": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                    "item/cr174_servicestatuslabel": "@triggerOutputs()?['body/_th_servicestatus_label']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                    "operationId": "UpdateOnlyRecord",
+                                    "connectionName": "shared_commondataserviceforapps"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "003ba805-9e54-4ba9-8fe8-5f7a035d0e83"
+                                }
+                              }
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "4aeab98a-cd64-4161-a53b-7b3fb7210445"
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {
+                          "Condition_Status_Is_NotStarted": {
+                            "type": "If",
+                            "expression": {
+                              "and": [
+                                {
+                                  "equals": [
+                                    "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                    "Not Started"
+                                  ]
+                                }
+                              ]
+                            },
+                            "actions": {
+                              "Update_a_row_StartTime_EndTime_to_Null__and_Status": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "entityName": "cr174_appointmentpowerbiaudits",
+                                    "recordId": "@first(outputs('List_rows_Audits')?['body/value'])?['cr174_appointmentpowerbiauditid']",
+                                    "item/cr174_cellcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                    "item/cr174_cellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                    "item/cr174_line_endtime": "@null",
+                                    "item/cr174_line_starttime": "@null",
+                                    "item/cr174_Modify_By_ExamLine@odata.bind": "@if(empty(triggerOutputs()?['body/_modifiedby_value']), null, concat('systemusers(', triggerOutputs()?['body/_modifiedby_value'], ')'))",
+                                    "item/cr174_modify_nm_examline": "@outputs('Get_a_row_by_ID_Exam_Modifier')?['body/fullname']",
+                                    "item/cr174_Resource_ExamLine@odata.bind": "@if(\r\n  empty(triggerOutputs()?['body/_th_resource_value']),\r\n  null,\r\n  concat('mzk_resources(', triggerOutputs()?['body/_th_resource_value'], ')')\r\n)",
+                                    "item/cr174_resourcenm_examline": "@if(\r\n  empty(outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']),\r\n  '',\r\n  outputs('Get_a_row_by_ID_Exam_Resource')?['body/mzk_name']\r\n)",
+                                    "item/cr174_servicestatus": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                    "item/cr174_servicestatuslabel": "@triggerOutputs()?['body/_th_servicestatus_label']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                    "operationId": "UpdateOnlyRecord",
+                                    "connectionName": "shared_commondataserviceforapps"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "f0aa4830-290a-4c0f-b86c-75d0b07e05ad"
+                                }
+                              }
+                            },
+                            "else": {
+                              "actions": {}
+                            },
+                            "metadata": {
+                              "operationMetadataId": "e0e0e345-ac18-44e7-970c-e36d69463927"
+                            }
+                          }
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "ca58cda4-0791-4a86-af60-899502ddf0b8"
+                      }
+                    }
+                  }
+                },
+                "metadata": {
+                  "operationMetadataId": "f3671324-b8ab-4273-8122-bffccd6a2254"
+                }
+              },
+              "List_rows_exam_line_By_ApptId": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "cr174_appointmentpowerbiaudits",
+                    "$filter": "_cr174_appointment_value eq '@{outputs('Get_a_Patient_Order_row_by_ID')?['body/_mzk_patientappointmentemr_value']}' and cr174_servicestatus eq 'Started' and  cr174_service_othercolumnkey ne 'Status' and _cr174_examcodeline_value eq '@{triggerOutputs()?['body/mzk_patientorderid']}'",
+                    "$orderby": "cr174_line_starttime asc"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "ListRecords",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "runAfter": {
+                  "List_rows_Audits_1": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "aef06117-a22e-4a0a-934f-e968ac38efea"
+                }
+              },
+              "Condition_-_has_a_started_exam": {
+                "type": "If",
+                "expression": {
+                  "and": [
+                    {
+                      "greater": [
+                        "@length(outputs('List_rows_exam_line_by_Apptid')?['body/value'])",
+                        0
+                      ]
+                    }
+                  ]
+                },
+                "actions": {
+                  "List_rows_exam_line_for_that_appt_id": {
+                    "type": "OpenApiConnection",
+                    "inputs": {
+                      "parameters": {
+                        "entityName": "cr174_appointmentpowerbiaudits",
+                        "$filter": "_cr174_appointment_value  eq @{outputs('Get_a_Patient_Order_row_by_ID')?['body/_mzk_patientappointmentemr_value']} "
+                      },
+                      "host": {
+                        "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                        "operationId": "ListRecords",
+                        "connectionName": "shared_commondataserviceforapps"
+                      }
+                    },
+                    "runAfter": {
+                      "For_each_started_exam": [
+                        "Succeeded"
+                      ]
+                    },
+                    "metadata": {
+                      "operationMetadataId": "3cd25635-8661-486f-bcd9-cd09f2888c6e"
+                    }
+                  },
+                  "Apply_to_each": {
+                    "type": "Foreach",
+                    "foreach": "@outputs('List_rows_exam_line_for_that_appt_id')?['body/value']",
+                    "actions": {
+                      "Condition_1": {
+                        "type": "If",
+                        "expression": {
+                          "and": [
+                            {
+                              "equals": [
+                                "@items('Apply_to_each')?['cr174_service_othercolumnkey']",
+                                "@first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])? ['cr174_service_othercolumnkey']"
+                              ]
+                            }
+                          ]
+                        },
+                        "actions": {
+                          "Update_a_row_waiting_content_2": {
+                            "type": "OpenApiConnection",
+                            "inputs": {
+                              "parameters": {
+                                "entityName": "cr174_appointmentpowerbiaudits",
+                                "recordId": "@items('Apply_to_each')?['cr174_appointmentpowerbiauditid']",
+                                "item/cr174_cellcolor": "@if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                "item/cr174_cellcolor_v1": "@if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                "item/cr174_finalcellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                "item/cr174_finalcellcontentcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                "item/cr174_finanlcellcontent": "@concat(\r\n  first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resource_examline']),\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_modify_nm_examline'],\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime']),\r\n    '',\r\n    formatDateTime(\r\n          first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime'],\r\n   \r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_first_examline_starttime']),\r\n    '0 mins',\r\n    concat(\r\n      string(\r\n        div(\r\n          sub(\r\n             ticks(convertFromUtc(\r\n                    utcNow(),\r\n                    first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n                     )),\r\n            ticks(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_first_examline_starttime'])\r\n          ),\r\n          600000000\r\n        )\r\n      ),\r\n      ' mins'\r\n    )\r\n  )\r\n)",
+                                "item/cr174_finanlcellcontent_v1": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                "item/cr174_first_examline_starttime": "@first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])? ['cr174_line_starttime']",
+                                "item/cr174_inexam": true
+                              },
+                              "host": {
+                                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                "operationId": "UpdateOnlyRecord",
+                                "connectionName": "shared_commondataserviceforapps"
+                              }
+                            },
+                            "metadata": {
+                              "operationMetadataId": "f81255b5-49db-41bc-bb4d-bb77cd6156dd"
+                            }
+                          }
+                        },
+                        "else": {
+                          "actions": {
+                            "Update_a_row_waiting_content_3": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "entityName": "cr174_appointmentpowerbiaudits",
+                                  "recordId": "@items('Apply_to_each')?['cr174_appointmentpowerbiauditid']",
+                                  "item/cr174_cellcolor": "@if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                  "item/cr174_cellcolor_v1": "@if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\nif(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                  "item/cr174_finalcellcolor_v1": "@if(empty(items('Apply_to_each')?['cr174_finalcellcolor_v1']), \r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n  '#8C5415')))))))), \r\n  items('Apply_to_each')?['cr174_finalcellcolor_v1']\r\n)",
+                                  "item/cr174_finalcellcontentcolor": "@if(empty(items('Apply_to_each')?['cr174_finalcellcontentcolor']), \r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\n  if(equals(items('Apply_to_each')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n  '#FFFFFF')))))))), \r\n  items('Apply_to_each')?['cr174_finalcellcontentcolor']\r\n)",
+                                  "item/cr174_first_examline_starttime": "@first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])? ['cr174_line_starttime']",
+                                  "item/cr174_inexam": true
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                  "operationId": "UpdateOnlyRecord",
+                                  "connectionName": "shared_commondataserviceforapps"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "61f31607-2f63-4e40-8132-0f045c107bcd"
+                              }
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "97e9cf5c-7e28-4d94-b207-b65789b34eb9"
+                        }
+                      }
+                    },
+                    "runAfter": {
+                      "List_rows_exam_line_for_that_appt_id": [
+                        "Succeeded"
+                      ]
+                    },
+                    "runtimeConfiguration": {
+                      "concurrency": {
+                        "repetitions": 38
+                      }
+                    },
+                    "metadata": {
+                      "operationMetadataId": "57e8ca3b-b04a-4de0-9dff-98b990a8ce36"
+                    }
+                  },
+                  "For_each_started_exam": {
+                    "type": "Foreach",
+                    "foreach": "@outputs('List_rows_exam_line_By_ApptId')?['body/value']",
+                    "actions": {
+                      "Update_a_row_exam_line_started": {
+                        "type": "OpenApiConnection",
+                        "inputs": {
+                          "parameters": {
+                            "entityName": "cr174_appointmentpowerbiaudits",
+                            "recordId": "@items('For_each_started_exam')?['cr174_appointmentpowerbiauditid']",
+                            "item/cr174_cellcontent": "@concat(\r\n  first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resource_examline']),\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_modify_nm_examline'],\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime']),\r\n    '',\r\n    formatDateTime(\r\n       first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime'],\r\n  \r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_first_examline_starttime']),\r\n    '0 mins',\r\n    concat(\r\n      string(\r\n        div(\r\n          sub(\r\n              ticks(convertFromUtc(\r\n                    utcNow(),\r\n                    first(outputs('List_rows_time_zone')?['body/value'])?['standardname']\r\n                     )),\r\n            ticks(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_first_examline_starttime'])\r\n          ),\r\n          600000000\r\n        )\r\n      ),\r\n      ' mins'\r\n    )\r\n  )\r\n)",
+                            "item/cr174_cellcontent_v1": "@triggerOutputs()?['body/_th_servicestatus_label']"
+                          },
+                          "host": {
+                            "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                            "operationId": "UpdateOnlyRecord",
+                            "connectionName": "shared_commondataserviceforapps"
+                          }
+                        },
+                        "metadata": {
+                          "operationMetadataId": "b1d6b28d-6c80-4672-99df-854418ef7b6b"
+                        }
+                      }
+                    },
+                    "runtimeConfiguration": {
+                      "concurrency": {
+                        "repetitions": 41
+                      }
+                    },
+                    "metadata": {
+                      "operationMetadataId": "27edbe54-876a-4cd7-a728-8b4e08dbf2f3"
+                    }
+                  }
+                },
+                "else": {
+                  "actions": {
+                    "List_rows_exam_line_By_ApptId_with_not_started": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "entityName": "cr174_appointmentpowerbiaudits",
+                          "$filter": "_cr174_appointment_value eq '@{outputs('Get_a_Patient_Order_row_by_ID')?['body/_mzk_patientappointmentemr_value']}' ",
+                          "$orderby": "cr174_line_endtime desc"
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "ListRecords",
+                          "connectionName": "shared_commondataserviceforapps"
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "aef06117-a22e-4a0a-934f-e968ac38efea"
+                      }
+                    },
+                    "For_each_not_started": {
+                      "type": "Foreach",
+                      "foreach": "@outputs('List_rows_exam_line_By_ApptId_with_not_started')?['body/value']",
+                      "actions": {
+                        "Condition_2": {
+                          "type": "If",
+                          "expression": {
+                            "and": [
+                              {
+                                "equals": [
+                                  "@items('For_each_not_started')?['cr174_service_othercolumnkey']",
+                                  "@first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_service_othercolumnkey']"
+                                ]
+                              }
+                            ]
+                          },
+                          "actions": {
+                            "Update_a_row_content_1_2": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "entityName": "cr174_appointmentpowerbiaudits",
+                                  "recordId": "@items('For_each_not_started')?['cr174_appointmentpowerbiauditid']",
+                                  "item/cr174_cellcolor": "@if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                  "item/cr174_cellcolor_v1": "@if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                  "item/cr174_cellcontent": "@concat(\r\n  first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resource_examline']),\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_modify_nm_examline'],\r\n    first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime']),\r\n    '',\r\n    formatDateTime(\r\n       first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime'],\r\n\r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_endtime']),\r\n    '',\r\n    formatDateTime(\r\n          first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_endtime'],\r\n \r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    or(\r\n      empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime']),\r\n      empty(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_endtime'])\r\n    ),\r\n    '0 mins',\r\n    concat(\r\n      string(\r\n        div(\r\n          sub(\r\n            ticks(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_endtime']),\r\n            ticks(first(outputs('List_rows_exam_line_By_Apptid')?['body/value'])?['cr174_line_starttime'])\r\n          ),\r\n          600000000\r\n        )\r\n      ),\r\n      ' mins'\r\n    )\r\n  )\r\n)",
+                                  "item/cr174_cellcontent_v1": "@items('For_each_not_started')?['cr174_servicestatuslabel']",
+                                  "item/cr174_duration": "@if(\r\n  and(\r\n    not(empty(items('For_each_not_started')?['cr174_line_endtime'])), \r\n    not(empty(items('For_each_not_started')?['cr174_line_starttime']))\r\n  ),\r\n  div(sub(ticks(items('For_each_not_started')?['cr174_line_endtime']), ticks(items('For_each_not_started')?['cr174_line_starttime'])), 600000000),\r\n  0\r\n)\r\n",
+                                  "item/cr174_finalcellcolor_v1": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#8C5415',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#676E73',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#3C5032',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#4B286D',\r\n'#8C5415'))))))))",
+                                  "item/cr174_finalcellcontentcolor": "@if(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Cancelled'), '#FF7E5A',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'No Show'), '#FFA500',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Required'), '#EAE5FF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Postponed'), '#FFFEE8',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Not Started'), '#FFFFFF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Declined'), '#E9AAD4',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Done'), '#D3CECF',\r\nif(equals(triggerOutputs()?['body/_th_servicestatus_label'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                  "item/cr174_finanlcellcontent": "@concat(\r\n  first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_resource_examline']),\r\n    first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_modify_nm_examline'],\r\n    first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_starttime']),\r\n    '',\r\n    formatDateTime(\r\n        first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_starttime'],\r\n   \r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime']),\r\n    '',\r\n    formatDateTime(\r\n       first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime'],\r\n\r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    or(\r\n      empty(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_starttime']),\r\n      empty(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime'])\r\n    ),\r\n    '0 mins',\r\n    concat(\r\n      string(\r\n        div(\r\n          sub(\r\n            ticks(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime']),\r\n            ticks(first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_starttime'])\r\n          ),\r\n          600000000\r\n        )\r\n      ),\r\n      ' mins'\r\n    )\r\n  )\r\n)",
+                                  "item/cr174_finanlcellcontent_v1": "@triggerOutputs()?['body/_th_servicestatus_label']",
+                                  "item/cr174_first_examline_starttime": "@if(\r\n  greater(length(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value']), 0),\r\n  first(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value'])?['cr174_Line_starttime'],\r\n  null\r\n)",
+                                  "item/cr174_inexam": "@greater(length(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value']), 0)",
+                                  "item/cr174_last_examline_endtime": "@first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime']"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                  "operationId": "UpdateOnlyRecord",
+                                  "connectionName": "shared_commondataserviceforapps"
+                                }
+                              },
+                              "metadata": {
+                                "operationMetadataId": "5f29665e-772d-4211-b445-fa58c4a7ab6b"
+                              }
+                            }
+                          },
+                          "else": {
+                            "actions": {
+                              "Update_a_row_content_1_2_1": {
+                                "type": "OpenApiConnection",
+                                "inputs": {
+                                  "parameters": {
+                                    "entityName": "cr174_appointmentpowerbiaudits",
+                                    "recordId": "@items('For_each_not_started')?['cr174_appointmentpowerbiauditid']",
+                                    "item/cr174_cellcolor": "@if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\nif(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n'#FFFFFF'))))))))",
+                                    "item/cr174_cellcolor_v1": "@\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n  '#8C5415'))))))))",
+                                    "item/cr174_finalcellcolor_v1": "@if(empty(items('For_each_not_started')?['cr174_finalcellcolor_v1']), \r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#8C5415',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#676E73',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#3C5032',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#4B286D',\r\n  '#8C5415')))))))), \r\n  items('For_each_not_started')?['cr174_finalcellcolor_v1']\r\n)",
+                                    "item/cr174_finalcellcontentcolor": "@if(empty(items('For_each_not_started')?['cr174_finalcellcontentcolor']), \r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Cancelled'), '#FF7E5A',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'No Show'), '#FFA500',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Required'), '#EAE5FF',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Postponed'), '#FFFEE8',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Not Started'), '#FFFFFF',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Declined'), '#E9AAD4',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Done'), '#D3CECF',\r\n  if(equals(items('For_each_not_started')?['cr174_servicestatus'], 'Started'), '#C7FFD5',\r\n  '#FFFFFF')))))))), \r\n  items('For_each_not_started')?['cr174_finalcellcontentcolor']\r\n)",
+                                    "item/cr174_first_examline_starttime": "@if(\r\n  greater(length(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value']), 0),\r\n  first(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value'])?['cr174_Line_starttime'],\r\n  null\r\n)",
+                                    "item/cr174_inexam": "@greater(length(outputs('List_rows_exam_line_By_ApptId_and_started')?['body/value']), 0)",
+                                    "item/cr174_last_examline_endtime": "@first(outputs('List_rows_Audits_1')?['body/value'])?['cr174_line_endtime']"
+                                  },
+                                  "host": {
+                                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                    "operationId": "UpdateOnlyRecord",
+                                    "connectionName": "shared_commondataserviceforapps"
+                                  }
+                                },
+                                "metadata": {
+                                  "operationMetadataId": "5f29665e-772d-4211-b445-fa58c4a7ab6b"
+                                }
+                              }
+                            }
+                          },
+                          "metadata": {
+                            "operationMetadataId": "1abbff89-e43c-4547-8490-30a2222924bb"
+                          }
+                        }
+                      },
+                      "runAfter": {
+                        "List_rows_exam_line_By_ApptId_and_started": [
+                          "Succeeded"
+                        ]
+                      },
+                      "runtimeConfiguration": {
+                        "concurrency": {
+                          "repetitions": 41
+                        }
+                      },
+                      "metadata": {
+                        "operationMetadataId": "9c8ebf29-67d2-4c3b-9c84-1d31054a1834"
+                      }
+                    },
+                    "List_rows_exam_line_By_ApptId_and_started": {
+                      "type": "OpenApiConnection",
+                      "inputs": {
+                        "parameters": {
+                          "entityName": "cr174_appointmentpowerbiaudits",
+                          "$filter": "_cr174_appointment_value eq '@{outputs('Get_a_Patient_Order_row_by_ID')?['body/_mzk_patientappointmentemr_value']}'   and cr174_servicestatus eq 'Started' and  cr174_service_othercolumnkey ne 'Status'",
+                          "$orderby": "cr174_line_starttime asc",
+                          "$top": 1
+                        },
+                        "host": {
+                          "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                          "operationId": "ListRecords",
+                          "connectionName": "shared_commondataserviceforapps"
+                        }
+                      },
+                      "runAfter": {
+                        "List_rows_exam_line_By_ApptId_with_not_started": [
+                          "Succeeded"
+                        ]
+                      },
+                      "metadata": {
+                        "operationMetadataId": "aef06117-a22e-4a0a-934f-e968ac38efea"
+                      }
+                    }
+                  }
+                },
+                "runAfter": {
+                  "List_rows_exam_line_By_ApptId": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "d6ae24fc-faff-4911-91d0-83167081bbeb"
+                }
+              },
+              "List_rows_Audits_1": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "cr174_appointmentpowerbiaudits",
+                    "$filter": "_cr174_examcodeline_value eq '@{triggerOutputs()?['body/mzk_patientorderid']}'"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "ListRecords",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "runAfter": {
+                  "Condition_Service_Status_Is_Started": [
+                    "Succeeded"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "b068bd5d-65f1-4365-a51c-d27ce43a5a72"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_Audits": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "e1ce67af-a28d-4760-94d0-45a9a56eceb5"
+          }
+        },
+        "Get_a_Patient_Order_row_by_ID": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "mzk_patientorders",
+              "recordId": "@triggerOutputs()?['body/mzk_patientorderid']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {},
+          "metadata": {
+            "operationMetadataId": "378858de-a008-42a7-8a85-171eea71b6f5"
+          }
+        },
+        "Get_a_row_by_ID_Exam_Modifier": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "systemusers",
+              "recordId": "@outputs('Get_a_Patient_Order_row_by_ID')?['body/_modifiedby_value']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Get_a_Patient_Order_row_by_ID": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "66b3fc49-180a-4d69-9c9c-7bf25b9fef3d"
+          }
+        },
+        "Condition_ExamLine_Resource_is_Empty": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@empty(outputs('Get_a_Patient_Order_row_by_ID')?['body/_th_resource_value'])",
+                  true
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "Get_a_row_by_ID_Exam_Resource": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "mzk_resources",
+                    "recordId": "@outputs('Get_a_Patient_Order_row_by_ID')?['body/_th_resource_value']"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "GetItem",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "metadata": {
+                  "operationMetadataId": "ee5fb508-7e33-4d12-8f24-8115b8ada4b8"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "Condition": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "bc3fe9db-f093-40d4-befb-7b7bd8da9254"
+          }
+        },
+        "Run_a_Child_Flow": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "807919f0-78bb-f111-aaaf-70a8a5103604"
+            }
+          },
+          "runAfter": {
+            "Condition_-_Not_Existing": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "84d7d70b-8302-455b-a5d8-cfe0aa28aa0a"
+          }
+        },
+        "List_rows_appt": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "cr174_appointmentpowerbiaudits",
+              "$filter": "_cr174_appointment_value eq @{triggerOutputs()?['body/_mzk_patientappointmentemr_value']}",
+              "$top": 1
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {
+            "Get_a_row_by_ID_Exam_Modifier": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "15cc0bd0-5f39-4270-bab7-7055fed32a1b"
+          }
+        },
+        "Condition": {
+          "type": "If",
+          "expression": {
+            "and": [
+              {
+                "equals": [
+                  "@length(outputs('List_rows_appt')?['body/value'])",
+                  0
+                ]
+              }
+            ]
+          },
+          "actions": {},
+          "else": {
+            "actions": {
+              "List_rows_UTC_Offset": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "cr174_clinic_flow_clinic_utc_offsets",
+                    "$filter": "_cr174_clinic_value eq '@{first(outputs('List_rows_appt')?['body/value'])?['_cr174_clinic_value']}'"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "ListRecords",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "metadata": {
+                  "operationMetadataId": "420660f1-a9f0-475f-94b7-2bf37bac46bf"
+                }
+              },
+              "List_rows_time_zone": {
+                "type": "OpenApiConnection",
+                "inputs": {
+                  "parameters": {
+                    "entityName": "timezonedefinitions",
+                    "$filter": "timezonecode eq @{first(outputs('List_rows_appt')?['body/value'])?['timezoneruleversionnumber']}"
+                  },
+                  "host": {
+                    "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                    "operationId": "ListRecords",
+                    "connectionName": "shared_commondataserviceforapps"
+                  }
+                },
+                "runAfter": {
+                  "List_rows_UTC_Offset": [
+                    "SUCCEEDED"
+                  ]
+                },
+                "metadata": {
+                  "operationMetadataId": "c10d11d2-3fd3-416f-aac2-6a48a2652c5e"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_appt": [
+              "Succeeded"
+            ]
+          }
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

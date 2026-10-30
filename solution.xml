@@ -1,0 +1,196 @@
+<ImportExportXml version="9.2.26102.122" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26102.122" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26102.00122">
+  <SolutionManifest>
+    <UniqueName>ClinicFlowDashBoardV1</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Clinic Flow DashBoard V1" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions />
+    <Version>1.0.0.12</Version>
+    <Managed>0</Managed>
+    <Publisher>
+      <UniqueName>Cre43e0</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="CDS Default Publisher" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions />
+      <EMailAddress xsi:nil="true"></EMailAddress>
+      <SupportingWebsiteUrl xsi:nil="true"></SupportingWebsiteUrl>
+      <CustomizationPrefix>cr174</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>48458</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode xsi:nil="true"></AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode xsi:nil="true"></ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+        <Address>
+          <AddressNumber>2</AddressNumber>
+          <AddressTypeCode xsi:nil="true"></AddressTypeCode>
+          <City xsi:nil="true"></City>
+          <County xsi:nil="true"></County>
+          <Country xsi:nil="true"></Country>
+          <Fax xsi:nil="true"></Fax>
+          <FreightTermsCode xsi:nil="true"></FreightTermsCode>
+          <ImportSequenceNumber xsi:nil="true"></ImportSequenceNumber>
+          <Latitude xsi:nil="true"></Latitude>
+          <Line1 xsi:nil="true"></Line1>
+          <Line2 xsi:nil="true"></Line2>
+          <Line3 xsi:nil="true"></Line3>
+          <Longitude xsi:nil="true"></Longitude>
+          <Name xsi:nil="true"></Name>
+          <PostalCode xsi:nil="true"></PostalCode>
+          <PostOfficeBox xsi:nil="true"></PostOfficeBox>
+          <PrimaryContactName xsi:nil="true"></PrimaryContactName>
+          <ShippingMethodCode xsi:nil="true"></ShippingMethodCode>
+          <StateOrProvince xsi:nil="true"></StateOrProvince>
+          <Telephone1 xsi:nil="true"></Telephone1>
+          <Telephone2 xsi:nil="true"></Telephone2>
+          <Telephone3 xsi:nil="true"></Telephone3>
+          <TimeZoneRuleVersionNumber xsi:nil="true"></TimeZoneRuleVersionNumber>
+          <UPSZone xsi:nil="true"></UPSZone>
+          <UTCOffset xsi:nil="true"></UTCOffset>
+          <UTCConversionTimeZoneCode xsi:nil="true"></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="1" schemaName="account" behavior="1" />
+      <RootComponent type="1" schemaName="cr174_appointmentpowerbiaudit" behavior="2" />
+      <RootComponent type="1" schemaName="cr174_clinic_flow_clinic_utc_offset" behavior="0" />
+      <RootComponent type="1" schemaName="cr174_clinic_flow_exam_servicevariant" behavior="0" />
+      <RootComponent type="1" schemaName="cr174_clinic_flow_othercolumn_variable" behavior="0" />
+      <RootComponent type="1" schemaName="cr174_cliniic_flow_colorcode" behavior="0" />
+      <RootComponent type="1" schemaName="cr174_columnconfiguration" behavior="0" />
+      <RootComponent type="1" schemaName="mzk_patientappointmentemr" behavior="1" />
+      <RootComponent type="29" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" behavior="0" />
+      <RootComponent type="29" id="{595beb90-73bb-f111-aaad-7ced8d66a679}" behavior="0" />
+      <RootComponent type="29" id="{72abd133-d5d3-f111-a05d-000d3af3ed99}" behavior="0" />
+      <RootComponent type="29" id="{7cde7a7e-21b1-f111-aaac-70a8a51033e6}" behavior="0" />
+      <RootComponent type="29" id="{807919f0-78bb-f111-aaaf-70a8a5103604}" behavior="0" />
+      <RootComponent type="29" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" behavior="0" />
+      <RootComponent type="29" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" behavior="0" />
+      <RootComponent type="300" schemaName="cr174_appinsertservicevariant_a64e6" behavior="0" />
+    </RootComponents>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="1" schemaName="cr174_appointmentpowerbiaudit" displayName="Appointment Power BI Audit" solution="ClinicFlowDashboard (1.0.0.3)" />
+        <Dependent type="1" schemaName="cr174_appointmentpowerbiaudit" displayName="Appointment Power BI Audit" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="cr174_clinic_flow_exam_servicevariant" displayName="Clinic_Flow_Exam_ServiceVariant" solution="ClinicFlowDashboard (1.0.0.3)" />
+        <Dependent type="1" schemaName="cr174_clinic_flow_exam_servicevariant" displayName="Clinic_Flow_Exam_ServiceVariant" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="cr174_cliniic_flow_colorcode" displayName="Clinic_Flow_ColorCode" solution="ClinicFlowDashboard (1.0.0.3)" />
+        <Dependent type="1" schemaName="cr174_cliniic_flow_colorcode" displayName="Clinic_Flow_ColorCode" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="cr174_columnconfiguration" displayName="Clinic Flow Column Configuration" solution="ClinicFlowDashboard (1.0.0.3)" />
+        <Dependent type="1" schemaName="cr174_columnconfiguration" displayName="Clinic Flow Column Configuration" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="msemr_codeableconcept" displayName="Codeable Concept" solution="FHIRCommonCore (4.4.3.6)" />
+        <Dependent type="300" schemaName="cr174_appinsertservicevariant_a64e6" displayName="App_InsertServiceVariant" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientappointmentemr" displayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="1" schemaName="mzk_patientappointmentemr" displayName="Patient Appointment " />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientappointmentemr" displayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Status_Changing_Flow" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientappointmentemr" displayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientappointmentemr" displayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientorder" displayName="Patient Order" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientorder" displayName="Patient Order" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_product" displayName="Product" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_resource" displayName="Resource" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_resource" displayName="Resource" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_appointmentnumber" displayName="Appointment Number" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_clinic_flow_othercolumn_variable_Appointment_mzk_patientappointmentemr" displayName="cr174_clinic_flow_othercolumn_variable_Appointment_mzk_patientappointmentemr" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_appointmentstatus" displayName="Appointment Status" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Status_Changing_Flow" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="th_servicestatus" displayName="Service Status" parentSchemaName="mzk_patientorder" parentDisplayName="Patient Order" solution="THCCImplementationCore (2.0.0.0)" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Status_Changing_Flow" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Clinic_Flow_GeneratingWaitTime_60s_v1" id="{595beb90-73bb-f111-aaad-7ced8d66a679}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - EndDay_Delete" id="{7cde7a7e-21b1-f111-aaac-70a8a51033e6}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Clinic_Flow_GeneratingWaitTime_v1" id="{807919f0-78bb-f111-aaaf-70a8a5103604}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
+        <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="account" displayName="Account" parentSchemaName="" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="1" schemaName="account" displayName="Account" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>

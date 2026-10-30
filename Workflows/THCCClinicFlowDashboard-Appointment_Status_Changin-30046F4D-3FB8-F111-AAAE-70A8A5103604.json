@@ -1,0 +1,157 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr174_sharedcommondataserviceforapps_092ab"
+        },
+        "runtimeSource": "embedded"
+      },
+      "shared_commondataserviceforapps-1": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr174_sharedcommondataserviceforapps_ab112"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "When_a_row_is_added,_modified_or_deleted": {
+          "type": "OpenApiConnectionWebhook",
+          "inputs": {
+            "parameters": {
+              "subscriptionRequest/message": 3,
+              "subscriptionRequest/entityname": "mzk_patientappointmentemr",
+              "subscriptionRequest/scope": 4,
+              "subscriptionRequest/filteringattributes": "mzk_appointmentstatus",
+              "subscriptionRequest/name": "ea8a31bb-27b1-f111-aaac-70a8a51033e6:MTA"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "SubscribeWebhookTrigger",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "1a46e64a-708a-4f7e-8be8-0a028f6f93b3"
+          }
+        }
+      },
+      "actions": {
+        "Run_a_Child_Flow": {
+          "type": "Workflow",
+          "inputs": {
+            "host": {
+              "workflowReferenceName": "807919f0-78bb-f111-aaaf-70a8a5103604"
+            }
+          },
+          "runAfter": {
+            "Apply_to_each": [
+              "Succeeded"
+            ]
+          },
+          "metadata": {
+            "operationMetadataId": "84d7d70b-8302-455b-a5d8-cfe0aa28aa0a"
+          }
+        },
+        "List_rows_Audit": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "cr174_appointmentpowerbiaudits",
+              "$filter": "_cr174_appointment_value eq '@{triggerOutputs()?['body/mzk_patientappointmentemrid']}'"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps-1"
+            }
+          },
+          "runAfter": {
+            "Get_a_appt_row_by_ID": [
+              "Succeeded"
+            ]
+          }
+        },
+        "Apply_to_each": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_Audit')?['body/value']",
+          "actions": {
+            "Update_a_row": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_appointmentpowerbiaudits",
+                  "recordId": "@items('Apply_to_each')?['cr174_appointmentpowerbiauditid']",
+                  "item/cr174_appointmentstatuslabel": "@outputs('Get_a_appt_row_by_ID')?['body/_mzk_appointmentstatus_value@OData.Community.Display.V1.FormattedValue']",
+                  "item/cr174_appointmentstatus@odata.bind": "@concat('/mzk_appointmentstatuses(', outputs('Get_a_appt_row_by_ID')?['body/_mzk_appointmentstatus_value'], ')')\r\n\r\n",
+                  "item/cr174_apptlabel": "@concat(\r\n  if(empty(items('Apply_to_each')?['cr174_arrivaltime']), '', formatDateTime(items('Apply_to_each')?['cr174_arrivaltime'], 'hh:mm tt')),\r\n  ' ',\r\n  coalesce(outputs('Get_a_appt_row_by_ID')?['body/_mzk_appointmentstatus_value@OData.Community.Display.V1.FormattedValue'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each')?['cr174_patientfullname'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each')?['cr174_patientmrn'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each')?['cr174_protocolnm'], ''),\r\n  decodeUriComponent('%0A'),\r\n  coalesce(items('Apply_to_each')?['_mzk_resource_value@OData.Community.Display.V1.FormattedValue'], '')\r\n)",
+                  "item/cr174_checkintime": "@if(empty(items('Apply_to_each')?['cr174_checkintime']), if(empty(outputs('Get_a_appt_row_by_ID')?['body/mzk_checkintime']),\r\noutputs('Get_a_appt_row_by_ID')?['body/modifiedon'], outputs('Get_a_appt_row_by_ID')?['body/mzk_checkintime']\r\n)\r\n, items('Apply_to_each')?['cr174_checkintime'])",
+                  "item/cr174_checkouttime": "@outputs('Get_a_appt_row_by_ID')?['body/th_checkoutdate']",
+                  "item/cr174_endtime": "@outputs('Get_a_appt_row_by_ID')?['body/mzk_endtime']",
+                  "item/cr174_starttime": "@outputs('Get_a_appt_row_by_ID')?['body/mzk_starttime']"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "UpdateOnlyRecord",
+                  "connectionName": "shared_commondataserviceforapps-1"
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_Audit": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 27
+            }
+          }
+        },
+        "Get_a_appt_row_by_ID": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "mzk_patientappointmentemrs",
+              "recordId": "@triggerOutputs()?['body/mzk_patientappointmentemrid']"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "GetItem",
+              "connectionName": "shared_commondataserviceforapps-1"
+            }
+          },
+          "runAfter": {}
+        }
+      },
+      "outputs": {}
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}

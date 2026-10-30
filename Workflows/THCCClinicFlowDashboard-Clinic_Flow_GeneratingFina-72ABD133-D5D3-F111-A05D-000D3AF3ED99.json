@@ -1,0 +1,251 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "shared_commondataserviceforapps": {
+        "api": {
+          "name": "shared_commondataserviceforapps"
+        },
+        "connection": {
+          "connectionReferenceLogicalName": "cr174_sharedcommondataserviceforapps_ab112"
+        },
+        "runtimeSource": "embedded"
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "undefined",
+      "parameters": {
+        "$authentication": {
+          "defaultValue": {},
+          "type": "SecureObject"
+        },
+        "$connections": {
+          "defaultValue": {},
+          "type": "Object"
+        }
+      },
+      "triggers": {
+        "Recurrence": {
+          "type": "Recurrence",
+          "recurrence": {
+            "frequency": "Second",
+            "interval": 60,
+            "startTime": "2026-09-02T17:00:00Z"
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "runs": 50
+            }
+          },
+          "metadata": {
+            "operationMetadataId": "743458f7-b19f-4c04-bac7-caf7358c4f09"
+          }
+        }
+      },
+      "actions": {
+        "List_rows_category": {
+          "type": "OpenApiConnection",
+          "inputs": {
+            "parameters": {
+              "entityName": "cr174_columnconfigurations",
+              "$select": "cr174_columnkey"
+            },
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+              "operationId": "ListRecords",
+              "connectionName": "shared_commondataserviceforapps"
+            }
+          },
+          "runAfter": {}
+        },
+        "Apply_to_each_category": {
+          "type": "Foreach",
+          "foreach": "@outputs('List_rows_category')?['body/value']",
+          "actions": {
+            "List_rows_appointment_id": {
+              "type": "OpenApiConnection",
+              "inputs": {
+                "parameters": {
+                  "entityName": "cr174_clinic_flow_othercolumn_variables",
+                  "$select": "_cr174_appointment_value"
+                },
+                "host": {
+                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                  "operationId": "ListRecords",
+                  "connectionName": "shared_commondataserviceforapps"
+                }
+              }
+            },
+            "Apply_to_each_appts": {
+              "type": "Foreach",
+              "foreach": "@outputs('List_rows_appointment_id')?['body/value']",
+              "actions": {
+                "List_rows_by_category_and_apptid": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "cr174_appointmentpowerbiaudits",
+                      "$filter": "_cr174_appointment_value eq '@{items('Apply_to_each_appts')?['_cr174_appointment_value']}' and cr174_service_othercolumnkey eq '@{items('Apply_to_each_category')?['cr174_columnkey']}' and cr174_appointmentstatuslabel ne 'Confirmed'",
+                      "$orderby": "cr174_line_endtime desc"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "ListRecords",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  }
+                },
+                "Condition_existing": {
+                  "type": "If",
+                  "expression": {
+                    "and": [
+                      {
+                        "greater": [
+                          "@length(outputs('List_rows_by_category_and_apptid')?['body/value'])",
+                          0
+                        ]
+                      },
+                      {
+                        "equals": [
+                          "@length(outputs('List_rows_by_category_and_apptid_started')?['body/value'])",
+                          0
+                        ]
+                      }
+                    ]
+                  },
+                  "actions": {
+                    "Condition": {
+                      "type": "If",
+                      "expression": {
+                        "or": [
+                          {
+                            "not": {
+                              "equals": [
+                                "@first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_cellcolor']",
+                                "@first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_finalcellcontentcolor']"
+                              ]
+                            }
+                          },
+                          {
+                            "greater": [
+                              "@length(outputs('List_rows_by_category_and_apptid_color_not_matched')?['body/value'])",
+                              0
+                            ]
+                          }
+                        ]
+                      },
+                      "actions": {
+                        "For_each": {
+                          "type": "Foreach",
+                          "foreach": "@outputs('List_rows_by_category_and_apptid')?['body/value']",
+                          "actions": {
+                            "Update_a_row_under_same_category": {
+                              "type": "OpenApiConnection",
+                              "inputs": {
+                                "parameters": {
+                                  "entityName": "cr174_appointmentpowerbiaudits",
+                                  "recordId": "@item()?['cr174_appointmentpowerbiauditid']",
+                                  "item/cr174_finalcellcolor_v1": "@First(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_cellcolor_V1']",
+                                  "item/cr174_finalcellcontentcolor": "@First(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_cellcolor']",
+                                  "item/cr174_finanlcellcontent": "@concat(\r\n  first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_service_columnkey'],\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_resource_examline']),\r\n    first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_modify_nm_examline'],\r\n    first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_resourcenm_examline']\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_starttime']),\r\n    '',\r\n    formatDateTime(\r\n      first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_starttime'],\r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    empty(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_endtime']),\r\n    '',\r\n    formatDateTime(\r\n      first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_endtime'],\r\n      'hh:mm tt'\r\n    )\r\n  ),\r\n  decodeUriComponent('%0A'),\r\n  if(\r\n    or(\r\n      empty(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_starttime']),\r\n      empty(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_endtime'])\r\n    ),\r\n    '0 mins',\r\n    concat(\r\n      string(\r\n        div(\r\n          sub(\r\n            ticks(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_endtime']),\r\n            ticks(first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_line_starttime'])\r\n          ),\r\n          600000000\r\n        )\r\n      ),\r\n      ' mins'\r\n    )\r\n  )\r\n)",
+                                  "item/cr174_finanlcellcontent_v1": "@first(outputs('List_rows_by_category_and_apptid')?['body/value'])?['cr174_servicestatuslabel']"
+                                },
+                                "host": {
+                                  "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                                  "operationId": "UpdateOnlyRecord",
+                                  "connectionName": "shared_commondataserviceforapps"
+                                }
+                              }
+                            }
+                          },
+                          "runtimeConfiguration": {
+                            "concurrency": {
+                              "repetitions": 46
+                            }
+                          }
+                        }
+                      },
+                      "else": {
+                        "actions": {}
+                      }
+                    }
+                  },
+                  "else": {
+                    "actions": {}
+                  },
+                  "runAfter": {
+                    "List_rows_by_category_and_apptid_color_not_matched": [
+                      "SUCCEEDED"
+                    ]
+                  }
+                },
+                "List_rows_by_category_and_apptid_started": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "cr174_appointmentpowerbiaudits",
+                      "$filter": "_cr174_appointment_value eq '@{items('Apply_to_each_appts')?['_cr174_appointment_value']}' and cr174_service_othercolumnkey eq '@{items('Apply_to_each_category')?['cr174_columnkey']}' and cr174_servicestatus eq 'Started'  and cr174_appointmentstatuslabel ne 'Confirmed' ",
+                      "$orderby": "cr174_line_endtime desc"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "ListRecords",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "runAfter": {
+                    "List_rows_by_category_and_apptid": [
+                      "Succeeded"
+                    ]
+                  }
+                },
+                "List_rows_by_category_and_apptid_color_not_matched": {
+                  "type": "OpenApiConnection",
+                  "inputs": {
+                    "parameters": {
+                      "entityName": "cr174_appointmentpowerbiaudits",
+                      "$filter": "_cr174_appointment_value eq '@{items('Apply_to_each_appts')?['_cr174_appointment_value']}' and cr174_service_othercolumnkey eq '@{items('Apply_to_each_category')?['cr174_columnkey']}' and cr174_servicestatus ne 'Started'  and cr174_appointmentstatuslabel ne 'Confirmed' and cr174_finalcellcontentcolor eq '#C7FFD5'",
+                      "$orderby": "cr174_line_endtime desc"
+                    },
+                    "host": {
+                      "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                      "operationId": "ListRecords",
+                      "connectionName": "shared_commondataserviceforapps"
+                    }
+                  },
+                  "runAfter": {
+                    "List_rows_by_category_and_apptid_started": [
+                      "SUCCEEDED"
+                    ]
+                  }
+                }
+              },
+              "runAfter": {
+                "List_rows_appointment_id": [
+                  "Succeeded"
+                ]
+              },
+              "runtimeConfiguration": {
+                "concurrency": {
+                  "repetitions": 50
+                }
+              }
+            }
+          },
+          "runAfter": {
+            "List_rows_category": [
+              "Succeeded"
+            ]
+          },
+          "runtimeConfiguration": {
+            "concurrency": {
+              "repetitions": 20
+            }
+          }
+        }
+      }
+    },
+    "templateName": null
+  },
+  "schemaVersion": "1.0.0.0"
+}
