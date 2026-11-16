@@ -1,11 +1,11 @@
-<ImportExportXml version="9.2.26102.122" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26102.122" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26102.00122">
+<ImportExportXml version="9.2.26104.134" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" OrganizationVersion="9.2.26104.134" OrganizationSchemaType="Full" CRMServerServiceabilityVersion="9.2.26104.00134">
   <SolutionManifest>
     <UniqueName>ClinicFlowDashBoardV1</UniqueName>
     <LocalizedNames>
       <LocalizedName description="Clinic Flow DashBoard V1" languagecode="1033" />
     </LocalizedNames>
     <Descriptions />
-    <Version>1.0.0.12</Version>
+    <Version>1.0.0.16</Version>
     <Managed>0</Managed>
     <Publisher>
       <UniqueName>Cre43e0</UniqueName>
@@ -78,6 +78,8 @@
     </Publisher>
     <RootComponents>
       <RootComponent type="1" schemaName="account" behavior="1" />
+      <RootComponent type="1" schemaName="contact" behavior="1" />
+      <RootComponent type="1" schemaName="cr174_appointmentaudit" behavior="0" />
       <RootComponent type="1" schemaName="cr174_appointmentpowerbiaudit" behavior="2" />
       <RootComponent type="1" schemaName="cr174_clinic_flow_clinic_utc_offset" behavior="0" />
       <RootComponent type="1" schemaName="cr174_clinic_flow_exam_servicevariant" behavior="0" />
@@ -85,13 +87,21 @@
       <RootComponent type="1" schemaName="cr174_cliniic_flow_colorcode" behavior="0" />
       <RootComponent type="1" schemaName="cr174_columnconfiguration" behavior="0" />
       <RootComponent type="1" schemaName="mzk_patientappointmentemr" behavior="1" />
+      <RootComponent type="1" schemaName="mzk_patientorder" behavior="1" />
+      <RootComponent type="1" schemaName="mzk_product" behavior="1" />
+      <RootComponent type="1" schemaName="mzk_resource" behavior="1" />
+      <RootComponent type="1" schemaName="systemuser" behavior="1" />
+      <RootComponent type="29" id="{190ba0c3-df74-4191-861e-d578731ec392}" behavior="0" />
       <RootComponent type="29" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" behavior="0" />
       <RootComponent type="29" id="{595beb90-73bb-f111-aaad-7ced8d66a679}" behavior="0" />
+      <RootComponent type="29" id="{7017e914-d6f9-476f-9b16-0dde5e82143a}" behavior="0" />
       <RootComponent type="29" id="{72abd133-d5d3-f111-a05d-000d3af3ed99}" behavior="0" />
       <RootComponent type="29" id="{7cde7a7e-21b1-f111-aaac-70a8a51033e6}" behavior="0" />
       <RootComponent type="29" id="{807919f0-78bb-f111-aaaf-70a8a5103604}" behavior="0" />
       <RootComponent type="29" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" behavior="0" />
+      <RootComponent type="29" id="{cc72feca-44d9-f111-84ea-7c1e528c72ab}" behavior="0" />
       <RootComponent type="29" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" behavior="0" />
+      <RootComponent type="29" id="{f0341681-ef9c-4dbe-a28a-1182dd8cc104}" behavior="0" />
       <RootComponent type="300" schemaName="cr174_appinsertservicevariant_a64e6" behavior="0" />
     </RootComponents>
     <MissingDependencies>
@@ -133,6 +143,10 @@
       </MissingDependency>
       <MissingDependency>
         <Required type="1" schemaName="mzk_patientorder" displayName="Patient Order" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="1" schemaName="mzk_patientorder" displayName="Patient Order" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_patientorder" displayName="Patient Order" solution="MazikCareBase (5.0.0.0)" />
         <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
       </MissingDependency>
       <MissingDependency>
@@ -141,7 +155,15 @@
       </MissingDependency>
       <MissingDependency>
         <Required type="1" schemaName="mzk_product" displayName="Product" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="1" schemaName="mzk_product" displayName="Product" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_product" displayName="Product" solution="MazikCareBase (5.0.0.0)" />
         <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Pre_Loading_Daily_v2" id="{a2878803-bfb6-f111-aaae-7c1e528c72ab}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="mzk_resource" displayName="Resource" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="1" schemaName="mzk_resource" displayName="Resource" />
       </MissingDependency>
       <MissingDependency>
         <Required type="1" schemaName="mzk_resource" displayName="Resource" solution="MazikCareBase (5.0.0.0)" />
@@ -153,6 +175,10 @@
       </MissingDependency>
       <MissingDependency>
         <Required type="2" schemaName="mzk_appointmentnumber" displayName="Appointment Number" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_Appointment_mzk_patientappointmentemr" displayName="cr174_appointmentaudit_Appointment_mzk_patientappointmentemr" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_appointmentnumber" displayName="Appointment Number" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " solution="MazikCareBase (5.0.0.0)" />
         <Dependent type="10" schemaName="cr174_clinic_flow_othercolumn_variable_Appointment_mzk_patientappointmentemr" displayName="cr174_clinic_flow_othercolumn_variable_Appointment_mzk_patientappointmentemr" parentSchemaName="mzk_patientappointmentemr" parentDisplayName="Patient Appointment " />
       </MissingDependency>
       <MissingDependency>
@@ -160,8 +186,28 @@
         <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Status_Changing_Flow" id="{30046f4d-3fb8-f111-aaae-70a8a5103604}" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="2" schemaName="th_servicestatus" displayName="Service Status" parentSchemaName="mzk_patientorder" parentDisplayName="Patient Order" solution="THCCImplementationCore (2.0.0.0)" />
+        <Required type="2" schemaName="mzk_patientordernumber" displayName="Patient Order Number" parentSchemaName="mzk_patientorder" parentDisplayName="Patient Order" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_ExamCodeLine_mzk_patientorder" displayName="cr174_appointmentaudit_ExamCodeLine_mzk_patientorder" parentSchemaName="mzk_patientorder" parentDisplayName="Patient Order" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="th_servicestatus" displayName="Service Status" parentSchemaName="mzk_patientorder" parentDisplayName="Patient Order" solution="THCCImplementationCore (2.0.0.2)" />
         <Dependent type="29" displayName="THCC Clinic Flow Dashboard - Appointment_Exam_Status_Changing_Flow_V1" id="{deac119c-5abc-f111-aaaf-000d3af3ed99}" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_name" displayName="Name" parentSchemaName="mzk_product" parentDisplayName="Product" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_ExamCode_mzk_product" displayName="cr174_appointmentaudit_ExamCode_mzk_product" parentSchemaName="mzk_product" parentDisplayName="Product" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_name" displayName="Name" parentSchemaName="mzk_product" parentDisplayName="Product" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_Protocol_mzk_product" displayName="cr174_appointmentaudit_Protocol_mzk_product" parentSchemaName="mzk_product" parentDisplayName="Product" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_name" displayName="Resource Name" parentSchemaName="mzk_resource" parentDisplayName="Resource" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_Resource_ExamLine_mzk_resource" displayName="cr174_appointmentaudit_Resource_ExamLine_mzk_resource" parentSchemaName="mzk_resource" parentDisplayName="Resource" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="2" schemaName="mzk_name" displayName="Resource Name" parentSchemaName="mzk_resource" parentDisplayName="Resource" solution="MazikCareBase (5.0.0.0)" />
+        <Dependent type="10" schemaName="cr174_appointmentaudit_Resource_mzk_resource" displayName="cr174_appointmentaudit_Resource_mzk_resource" parentSchemaName="mzk_resource" parentDisplayName="Resource" />
       </MissingDependency>
       <MissingDependency>
         <Required type="connectionreference" displayName="cr174_sharedcommondataserviceforapps_092ab" solution="ClinicFlowDashboard (1.0.0.3)" id.connectionreferencelogicalname="cr174_sharedcommondataserviceforapps_092ab" />
@@ -190,6 +236,14 @@
       <MissingDependency>
         <Required type="1" schemaName="account" displayName="Account" parentSchemaName="" solution="MazikCareBase (5.0.0.0)" />
         <Dependent type="1" schemaName="account" displayName="Account" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="contact" displayName="Contact" parentSchemaName="" solution="THCCImplementationCore (2.0.0.2)" />
+        <Dependent type="1" schemaName="contact" displayName="Contact" />
+      </MissingDependency>
+      <MissingDependency>
+        <Required type="1" schemaName="systemuser" displayName="SystemUser" parentSchemaName="" solution="THCCImplementationCore (2.0.0.2)" />
+        <Dependent type="1" schemaName="systemuser" displayName="SystemUser" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>
